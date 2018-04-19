@@ -1,14 +1,7 @@
 import re
 import sqlalchemy
+import db.data_layer as db
 from flask import Flask, session, request, redirect, render_template, flash, url_for
-from db.data_layer import create_user, get_user_by_email
-
-# import db.data_layer as db
-'''
-USAGE:        db.<function_name>
-EXAMPLES:     db.search_by_user_or_email('Smith')
-              db.search_by_user_or_email('gmail.com')
-'''
 
 EMAIL_REGEX = re.compile(r'^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$')
 
@@ -17,27 +10,39 @@ app.secret_key = '0d599f0ec05c3bda8c3b8a68c32a1b47'
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    show_create = True
+    if ('filter_user_id' in session):
+        db_quotes = db.get_all_quotes_for(session['filter_user_id'])
+        del session['filter_user_id']
+        show_create = False
+    else:
+        db_quotes = db.get_all_quotes()
+    return render_template('index.html', quotes=db_quotes, show_create=show_create)
 
 @app.route('/create_quote', methods=['POST'])
 def create_quote():
-    pass
+    db.create_quote(session['user_id'], request.form['content'])
+    return redirect(url_for('index'))
 
-@app.route('/delete/<quote_id>')
+@app.route('/delete_quote/<quote_id>')
 def delete_quote(quote_id):
-    pass
+    db.delete_quote(quote_id)
+    return redirect(url_for('index'))
 
-@app.route('/search')
+@app.route('/search', methods=['POST'])
 def search():
-    return redirect(url_for('search_users', query=request.args['html_query']))
+    user_filter = request.form['user_filter']
+    if (len(user_filter) <= 0):
+        return redirect(url_for('index'))
+    db_users = db.search_by_user_or_email(user_filter)
+    if (len(db_users) <= 0):
+        return redirect(url_for('index'))
+    return render_template('search_results.html', users=db_users)
 
-@app.route('/results/<query>')
-def search_users(query):
-    pass
-
-@app.route('/user/<user_id>')
+@app.route('/user_quotes/<user_id>')
 def user_quotes(user_id):
-    pass
+    session['filter_user_id'] = user_id
+    return redirect(url_for('index'))
 
 @app.route('/register_form')
 def register_form():
@@ -58,7 +63,7 @@ def login():
         return redirect(url_for('login_form'))
     user = None
     try:
-        user = get_user_by_email(request.form['email'])
+        user = db.get_user_by_email(request.form['email'])
     except sqlalchemy.orm.exc.NoResultFound:
         flash('failed login attempt!')
     except Exception as ex:
@@ -86,7 +91,7 @@ def register():
         return redirect(url_for('register_form'))
     user = None
     try:
-        user = create_user(request.form['email'], request.form['fullname'], request.form['password'])
+        user = db.create_user(request.form['email'], request.form['fullname'], request.form['password'])
     except sqlalchemy.exc.IntegrityError:
         flash('email address already registered!')
     except Exception as ex:

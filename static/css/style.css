@@ -1,21 +1,11 @@
-.quote div, .user div {
+
+.quote-box {
     box-shadow: 4px 4px 10px #aaa;
-    padding: 30px 30px 15px 30px;
     border: 1px solid #eee;
-    margin-bottom: 50px;
+    margin-bottom: 20px;
 }
 
-.quote p {
+ .quote-text {
     font-size: 1.5em;
-    padding-left: 15px;
     border-left: 5px solid #ddd;
-}
-
-
-
-.user p {
-    font-size: 2em;
-    padding-left: 0;
-}
-
-
+ }

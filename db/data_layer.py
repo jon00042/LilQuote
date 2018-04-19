@@ -5,25 +5,24 @@ from db.entities import User, Quote
 db = DbManager()
 
 def get_all_quotes():
-    pass
+    return db.open().query(Quote).order_by(Quote.created_at.desc()).all()
 
 def get_all_quotes_for(user_id):
-    pass
+    return db.open().query(Quote).filter(Quote.user_id == user_id).order_by(Quote.created_at.desc()).all()
 
 def search_by_user_or_email(query):
     return db.open().query(User).filter(or_(User.fullname.like('%{}%'.format(query)), User.email.like('%{}%'.format(query)))).all()
 
 def create_quote(user_id, content):
-    pass
+    user = db.open().query(User).filter(User.id == user_id).one()
+    quote = Quote()
+    quote.user = user
+    quote.content = content
+    db.save(quote)
 
 def delete_quote(quote_id):
-    pass
-
-def get_user_by_id(user_id):
-    pass
-
-def get_user_by_name(fullname):
-    pass
+    quote = db.open().query(Quote).filter(Quote.id == quote_id).one()
+    db.delete(quote)
 
 def get_user_by_email(email):
     return db.open().query(User).filter(User.email == email).one();
@@ -35,5 +34,4 @@ def create_user(email, fullname, password):
     user.password = password
     db.save(user)
     return user
-
 

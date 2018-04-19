@@ -1,0 +1,21 @@
+
+{% extends 'base.html' %}
+
+{% block body %}
+
+{% for user in users %}
+
+<div class="row px-3 mt-4">
+    <div class="col-10 offset-1 quote-box">
+        <p class="quote-text px-3">{{user.fullname}}</p>
+        <div class="row">
+            <div class="col-3"><a href="{{url_for('user_quotes',user_id=user.id)}}">{{user.email}}</a></div>
+            <div class="col-6"></div>
+            <div class="col-3 text-right">{{user.created_at}}</div>
+        </div>
+    </div>
+</div>
+
+{% endfor %}
+
+{% endblock %}
